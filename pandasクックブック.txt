@@ -1,0 +1,1469 @@
+Pandas クックブック
+
+
+■pandasの基礎
+
+・レシピ1:DataFrameの解剖学
+  ・NaN(not a number)で欠損値を表す  
+  ・False/Trueは数値的に0/1と評価する
+
+・レシピ2:DataFreme 主要素へのアクセス
+  ・indexの値を取得
+    	data.index (Indexオブジェクト)
+    	data.index.values (Nadarry)
+    
+  ・カラム名を取得
+    	data.columns (Indexオブジェクト)
+    	data.columns.values(Nadarry)
+    	series.name (Seriesの場合)
+    
+  ・値を取得
+    	data.values
+    	
+  ・データ型の確認
+    	type(data.index)    	
+	
+    	
+・レシピ3:データ型の理解 
+  ・各カラムとそのデータ型を表示 
+    	data.dtypes
+    	
+  ・object型は普通は文字列だが同一カラム内に複数型があった場合でも使用される
+  ・category型は異なる値の個数が少ないオブジェクトカラムで使うと有効
+  ・欠損値のある数値カラムはfloat型になる  
+  
+  ・各データ型の個数を数える
+    	data.get_dtype_counts()
+    	
+  ・データ型についてのNumPy公式文書
+   https://numpy.org/doc/stable/user/basics.types.html
+   
+・レシピ4:データのカラムをSeriesとして選択取得 
+  ・DataFrameからデータのSeriesを選択
+    	data['director_name']  
+    	data.director_name (空白や特殊文字を含む場合はこの方法は使用出来ない)
+  
+  ・Seriesを1カラムのDataFrameにする
+    	series.to_frame()   
+    	series[['director_name']]
+    	
+・レシピ5:Seriesのメソッド呼び出し 
+  ・先頭行を確認する
+    	series.head()  
+    	
+  ・異なる値の個数を数える 
+    	series.value_counts()
+    	series.value_counts(normalize=True) ※相対度数を返し、分布情報が得らえれる
+    	
+  ・要素数を数える
+    	series.size
+    	series.shape
+    	len(series)
+    	
+  ・非欠損値の個数を数える
+    	series.count() 
+    	
+  ・基本要約統計量を求める
+  	    series.min(), series.max(), series.mean()
+  	    series.median(), series.std(), series.sum()
+  	    
+  ・基本統計量を簡略化して表示 
+    	series.describe()   
+    	
+  ・数値データの正確な四分位を計算する     	  
+     	series.quantile(.2)
+     	
+  ・Seriesに欠損値があるか
+     	series.hasnans    	
+     	
+  ・個別の値が欠損値かどうか判定する
+     	series.isnull() 
+     	sereis.notnull() ※非欠損値に対してTrueを返す
+     	
+  
+  ・欠損値を別の値に置き換える 
+      	series.fillna(0)
+  
+  ・欠損値を削除する 
+      	series.dropna() 
+  
+・レシピ6:Seriesの演算子の動き
+  ・演算子を使う事が出来る
+     	series + 1     series.add(1)
+     	series - 1     series.sub(1)       subtraction
+     	series * 2     series.mul(2)       multiplication
+     	series / 2     series.div(2)       division
+     	series // 2    series.floordiv(2)
+     	series % 2     series.mod(2)       modification
+     	series **2     series.pow(2) 
+     	
+  ・比較演算子を使う事が出来る 
+     	series < 1     series.lt(1)
+     	series > 1     series.gt(1)
+     	series <= 2     series.le(2)
+     	series >= 2     series.ge(2)
+     	series == 2    series.eq(2)
+     	series != 2     series.ne(2)
+
+・レシピ7:Seriesのメソッドチェイニング
+   ・式が長い場合は読みにくいのでバックスラッシュ(\)を使う
+   ・()で式全体を囲うとバックスラッシュが必要ない
+   
+   ・メソッドチェイニングの例    
+      	series.value_counts().head() 
+      	series.isnull().sum()
+       	series.fillna(0).astype(int) ※欠損値を0に変えて整数型に変換
+  
+・レシピ8:分かりやすいインデックスに置き換え  
+   ・DataFrameのインデックス名を指定する     
+      	df.set_index('movie_title')
+      	df.set_index('movie_title', drop=False) ※カラムとしても保持できる
+      	pd.read_csv('data.csv', index_col='movie_title')
+  
+   ・インデックスをRangeIndexに戻す    
+      	df.reset_index()
+      	
+・レシピ9:行とカラムの名前変更
+   ・辞書形式で古い値を新しい値にマッピングする  
+        idx_rename = {'Avatar':'Ratava', 'Spectre': 'Ertceps'}
+        col_rename = {'director_name':'Director Name', 'num_critic_for_reviews': 'Critical Reviews'}       	
+        data.rename(index=idx_rename, columns=col_rename) 
+        
+   ・リストに変換して変更する          
+		index = movie.index
+		columns = movie.columns
+		index_list = index.tolist()
+		column_list = columns.tolist()
+		
+		# rowとcolumnのラベルを代入で変更する
+		index_list[0] ='Ratava'
+		index_list[2] ='Ertceps'
+		column_list[1] = 'Director Name'
+		column_list[2] = 'Critical Reviews'
+		
+		# 最後にindexとcolumnsに代入する
+		movie.index = index_list
+		movie.columns = column_list
+		movie.head(3)       
+        
+・レシピ10:カラムの作成と削除
+    ・カラムを作成する  
+      	data['tuika'] = 1
+      	data['tuika2'] = data['mov1'] + data['mov2']
+      	
+    ・カラムが全てTrueか調べる        	
+       	data['tuika2'].all()          	
+       	
+    ・カラムを削除する
+       	data.drop('tuika', axis='columns) 
+       	del dada['tuika']
+       	
+    ・行を削除する
+       	data.drop('11') ※index名を指定する        	
+       	
+    ・Seriesとして分かりやすく出力する為、indexを変更する
+    	df.set_index('movie_title')['tuika'].head()
+    	
+    ・所定の位置にカラムを挿入する
+        data.insert(カラム挿入位置,新たなカラム名,値) ※inplaceで変更する
+        
+    ・カラム名の整数位置を知る
+        data.columns.get_loc('tuika')
+        
+■DataFrameの必須演算        
+        
+・レシピ11:DataFrameのカラムを複数選択(リストで渡す)
+         df[['actor_1_name', 'actor_2_name', 'actor_3_name', 'director_name']] 
+         
+         cols = ['actor_1_name', 'actor_2_name', 'actor_3_name', 'director_name']
+         movie[cols]
+         
+・レシピ12:カラムをメソッドで選択
+    ・特定のデータ型だけのカラムを選ぶ   
+         data.select_dtypes(include=['int64'])             
+         data.select_dtypes(include=[''number']) 
+         
+    ・カラム名 or インデックスラベルから探す
+         data.filter(like='facebook') 
+         data.filter(regex='\d') ※正規表現も使用できる
+         
+・レシピ13:カラムを意味が分かるように順序付け
+    ・カラム順のガイドライン
+      ・カラムを離散か連続かで分ける
+      ・離散カラムと連続カラムで共通のカラムをグループ分けする
+      ・カテゴリデータの最も重要なカラム群を連続データより前に置く
+      ・固定定数を置き、次に測定変数を置く
+      
+・レシピ14:DataFrame全体の操作
+     ・基本属性値を取得する
+         df.shape
+         df.size
+         df.ndim  ※次元数を確認する
+         len(df)
+         df.count() ※各カラムの非欠損値個数を数える  
+         
+     ・基本要約統計量を求める(各カラム毎で表示)   
+         df.min(), df.max(), df.mean()       
+         df.min(skipna=False) ※1つでも欠損値があるとNaNを返す            
+                                  
+     ・基本統計量を簡略化して表示(各カラム毎で表示)
+         df.describe()
+         df.describe(percentiles=[.01,.3,.99]) ※百分位を細かく設定
+         
+・レシピ15:DataFrameのメソッドチェイニング   
+     ・メソッドチェイニングの例       
+         df.isnull().sum()  ※各カラムの欠損値の個数を数える
+         df.isnull().sum().sum() 欠損値の個数をスカラー値で返す
+         df.isnull().any()  ※各要素に１つでもTrueがあるか確認する
+         df.isnull().any().any() ※DFに欠損値があるかどうか
+         
+     ・オブジェクト型で欠損値があり、集約関数で何か返す必要ある場合は欠損値に空文字を入れる 
+         df['color'].fillna('').min() 
+         
+・レシピ16:DataFrameの演算子の働き                    
+  ・演算子を使う事が出来る
+     	df + 1     df.add(1)
+     	df - 1     df.sub(1)
+     	df * 2     df.mul(2)
+     	df / 2     df.div(2)
+     	df // 2    df.floordiv(2)
+     	df % 2     df.mod(2)
+     	df **2     df.pow(2) 
+     	
+  ・比較演算子を使う事が出来る 
+     	df < 1     df.lt(1)
+     	df > 1     df.gt(1)
+     	df <= 2    df.le(2)
+     	df >= 2    df.ge(2)
+     	df == 2    df.eq(2)
+     	df != 2    df.ne(2) 
+     	
+  ・丸め機能
+        df.round(2) ※Numpyはちょうど真ん中の数値を偶数側に丸める   
+        浮動小数点演算：https://docs.oracle.com/cd/E19957-01/806-4847/ncg_goldberg.html
+        
+・レシピ17:欠損値の比較         
+  ・np.nanについて
+        np.nan == np.nan        
+        >>>False
+        None == None
+        >>>True
+        np.nan != 5
+        >>>True
+        
+  ・２つのDataFrame全体を比較する
+        df1.equals(df2)      ※equalsメソッドはカラムの値が同じでもデータ型が異なるとFalseになる
+        >>>True 
+        
+・レシピ18:DataFrame 演算の方向を転置 
+    ・axisを1かcolumnsにすると行データの非欠損値を数える
+         df.count(axis=1)
+         df.count(axis=columns)
+         
+    ・axis=1でcumsumメソッドを使うと各行の累積和となる           
+         df.cumsum(axis=1)
+
+・レシピ19:大学のキャンパスのダイバーシティ指標の計算
+    ・dropnaで欠損した行を削除
+          df.dropna(how=all)  ※全ての値が欠損した行を削除   
+          df.dropna(how=any)  ※１つ以上欠損値がある行を削除   
+
+
+■データ分析開始
+
+・レシピ20:データ分析ルーチンの開発
+    ・EDA,Exploratory Data Analysis(探索的データ分析)
+    　→統計的検定手続きを使わないデータ分析のプロセス全体を指す用語
+    　→データ間の関係を様々に可視化してパターンを発見したり、仮説を開発する
+
+    ・①データセットを読み先頭行を確認する
+          data = pd.read_csv('data.csv')
+          data.head()
+          
+      ②DataFrameの次元を確認する    
+          data.shape
+
+      ③各カラムのデータ型、非欠損値の個数、メモリ使用量を確認する    
+          data.info()
+          
+      ④数値カラムの要約統計量を求め、見やすいように横に転置する
+          data.describe(include=[np.number]).T   ※文字列のnumberでもOK
+             
+      ⑤カテゴリカラムの要約統計量を求め、見やすいように横に転置する
+          data.describe(include=[np.object, pd.Categorical]).T
+
+    ・データセットを作成する時、カラム名の意味を説明するデータ辞書を別途作成した方がよい
+
+
+・レシピ21:データ型を変更してメモリ削減
+    ・各カラムのメモリ使用量を表示
+          df.memory_usage(deep=True)
+
+    ・カラムの型を変換する
+          df['col1'].astype(np.int8)
+          
+          
+    ・数字だけの文字列を数値に変換する(数値に変換できない文字は欠損値にする)  ※レシピ50より  
+          college[col] = pd.to_numeric(college[col], errors='coerce')          
+
+    ・固有値(ユニーク値）の数を数える
+          df.nunique()
+
+    ・pandasのデフォルトでは64ビットのintegerとfloatデータ型になる
+    ・メモリ削減で0/1のデータはint64→int8にするとよい
+    ・object型は文字列、数、日付時間、リストやタプルなどのPythonオブジェクトも含まれる
+    ・object型で固有値が少ないカラムはcategory型に変換するとメモリ削減になる
+    ・integerデータ型のカラムは欠損値があるとfloat型に変換される
+
+・レシピ22:最大の中の最小を選択
+    ・あるカラムの上位n個を表示する
+          df.nlargest(n, 'col1')
+
+    ・あるカラムの下位n個を表示する
+          df.nsmallest(n, 'col2')
+          
+    ・メソッドチェイニングも可能
+          df.nlargest(n, 'col1').nsmallest(n, 'col2')  
+          
+    ・リストで渡せば複数も可能
+          df.nlargest(n, ['col1', 'col3])
+          
+・レシピ23:ソートして各グループでの最大を選択        
+    ・ソートする  
+          df.sort_values('col1')  ※デフォルトは昇順
+          df.sort_values('col1', ascending=False) ※降順   
+    
+    ・複数カラムを同時ソートする    
+          df.sort_values(['col1', 'col2']) 
+          
+    ・カラム毎にソートの向きを変える           
+          df.sort_values(['col1', 'col2','col3'], ascending=[False, True, False])           
+             
+    
+    ・重複行を削除する     
+          df.drop_duplicates()  ※デフォルトでは先頭を保持、keep=lastで末尾行、keep=Falseで重複を全て削除
+    
+    ・指定カラムの重複行を削除する(複数カラムの場合はリストで渡す)  
+          df.drop_duplicates(subset='col')  
+    
+・レシピ24:sort_valuesでnlargestの代用
+
+・レシピ25:トレール注文の価格計算
+    ・カラムの最大値をトレースして、トラックする
+              df['col1'].cummax()  
+              
+    ・カラムの最小値をトレースして、トラックする
+              df['col1'].cummin()                
+                           	        
+    ・カラムの累積和をトレースして、トラックする
+              df['col1'].cumsum()   
+              
+    ・カラムの累積積をトレースして、トラックする
+              df['col1'].cumprod()                 
+
+
+■データからの部分抽出
+              
+・レシピ26:Seriesデータの選択
+
+    ・インデックス演算子は[]で選択すること、s[item]
+    ・インデクサはloc/ilocで値を取得すること。
+    
+    ・Seriesで.ilocを1個だとスカラー値、リストで複数だとSeriesが返る
+              series.iloc[3]
+              series.iloc[[10,20,30]] 
+                   
+    ・Seriesでスライス選択もできる    
+              series.iloc[4:50:10]
+              series.loc['aa':'zz':10]     
+    
+    ・Seriesで.locを1個だとスカラー値、リストで複数だとSeriesが返る   
+              series.loc['a']
+              series.loc[['a','b','c']] 
+              
+    ・インデックスからランダムで選択する 
+              randam_list = list(np.random.choice(series.index,4))              
+                  
+・レシピ27:DataFrameの行の選択
+
+    ・DataFrameで.ilocに整数1個だと行のSeries、リストで複数だとDataFrameが返る
+              df.iloc[3]
+              df.iloc[[10,20,30]]     
+
+    ・DataFrameで.locにindexラベルだと行のSeries、リストで複数だとDataFrameが返る
+              df.loc['a']
+              df.loc[['a','b','c']]     
+              
+    ・DataFrameでスライス選択もできる    
+              df.iloc[4:50:10]
+              df.loc['aa':'zz':10]        
+    
+・レシピ28:DataFrameの行とカラムの同時選択    
+    
+    ・行とカラムを選択する    
+              df.iloc[rows,columns]    
+              df.loc[rows,columns]      
+    
+    ・異なるカラム2つと全行の場合    
+              df.iloc[:,[4,8]]        
+              df.loc[:,['aa','ff']]            
+    
+    ・行と列をそれぞれ選ぶ      
+              df.iloc[[2,9],[4,8]]        
+              df.loc[['vv_1'vv_8',''],['aa','ff']]      
+    
+    ・単一スカラー値を選ぶ
+              df.iloc[5,-4]
+              df.loc['vv_1', 'ff']  
+              
+・レシピ29:整数とラベルの両方でデータ選択
+    ・カラムの整数位置を取得する
+              df.columns.get_loc('gg')     
+              
+    ・indexの整数位置を取得する
+              df.index.get_loc('gg')                   
+              
+    ・指定のindexラベルを取得する                              
+              df.index[10]                      
+              
+・レシピ30:スカラー選択の高速化    
+    ・locの代わりにatを使うとスカラー値検索が早い
+              df.at['vv_1', 'ff']
+
+    ・ilocの代わりにiatを使うとスカラー値検索が早い
+              df.iat[5,-4]
+              
+    ・コードの処理実行時間を計測する              
+              %timeit      ※1行の処理計測をする             
+              %%timeit     ※先頭行に書いて、コードブロック全体を計測する   
+                            
+・レシピ31:行の手軽なスライシング    
+    ・locを使わず行のスライシングが可能
+              df['vv_1':'vv20':5]
+              series['vv_1':'vv20':5]
+              
+              
+・レシピ32:文字順にスライシング
+
+    ・インデックスをソートする
+              df.sort_index()
+              
+    ・インデックスが文字順にソートされている場合、文字でスライスが出来る
+              df.loc['v':'z']   ※インデックス値そのものでなくてもOK 例：'abcde'なら'ab'でOK
+
+    ・インデックスのソート方向を確認する
+              df.idnex.is_monotonic_decreasing
+              df.idnex.is_monotonic_increasing
+
+■Booleanインデックス法(データのフィルタリング)
+
+・レシピ33:Boolean統計量の計算
+    ・ある条件に一致しているかは比較演算子で調べる
+              df['aa'] > 120
+
+    ・ある条件に一致している個数を数える
+              df['aa'].gt(120).sum()
+
+    ・Boolean条件は欠損値に対してFalseを返す   
+    
+・レシピ34:複数のBoolean条件の構築    
+    ・pandasの論理式には&, | , ~ (and, or, not)を使う 
+       
+    ・条件を組み合わせて１つのBoolean Seriesにする   
+              criteria1 = movie.imdb_score > 8
+              criteria2 = movie.content_rating == 'PG-13'
+              criteria3 = (movie.title_year < 2000) | (movie.title_year >= 2010)  
+              
+              criteria_final = criteria1 & criteria2 & criteria3  
+    
+・レシピ35:Booleanインデックス法によるフィルタリング               
+    ・データフィルタリングするためにインデックス演算子に渡す                
+              criteria1 = movie.imdb_score > 8
+              criteria2 = movie.content_rating == 'PG-13'
+              criteria3 = (movie.title_year < 2000) | (movie.title_year >= 2010)
+              criteria_final = criteria1 & criteria2 & criteria3                
+              
+              movie[criteria_final].head()
+              
+    ・locを使うと行とカラム両方をフィルタリング出来る               
+              
+              cols = ['imdb_score', 'content_rating', 'title_year']
+              movie_filtered = movie.loc[criteria_final,cols]
+              
+・レシピ36:インデックス選択によるBooleanインデックス法の代用                    
+    ・インデックス選択するにはカラムをindexに渡す              
+              college.set_index('STABBR')
+              
+    ・インデックス選択の方がBoolean選択より速い               
+              
+    ・Boolen選択で複数選択する場合はisinメソッドを使う
+              states = ['TX', 'CA', 'NY']
+              college[college['STABBR'].isin(states)]        
+              
+・レシピ37:重複のないインデックスとソートしたインデックスによる選択
+    ・インデックスに重複がなくソートされているとインデックス選択は速い
+              
+    ・インデックスに重複がないか確認する           
+              college.index.is_unique
+              
+    ・複数カラムを連結してインデックスにする事もできる
+              college.index = college['CITY'] + ',' + college['STABBR']
+    
+・レシピ38:株価見通しの計算    
+    ・日付データをDatetimeIndexで読み込む     
+              pd.read_csv('data.csv', index_col='Date',parse_dates=['Date'])
+    
+    ・サマリ表の値を抽出できる         
+              slb_summary = data.describe(percentiles=[.1, .9])
+              upper_10 = slb_summary.loc['90%']
+              lower_10 = slb_summary.loc['10%']
+    
+    
+・matplotlibのfill_betweenを使うと2つの線で挟まれた領域を塗りつぶす
+               data.plot(color='black', figsize=(12,6))
+               plt.hlines(y=[lower_10, upper_10],xmin=xmin, xmax=xmax,color='lightgray')
+               plt.fill_between(x=criteria.index, y1=lower_10,y2=data.values, color='black')
+    
+・レシピ39:SQLのWHERE節の翻訳      
+    ・Seriesにはbetweenメソッドがあり範囲内のデータをBooleanで判定する                 
+               employee.BASE_SALARY.between(8000, 120000)    
+      ※上記式と等価 (employee.BASE_SALARY >= 80000) & (employee.BASE_SALARY <= 120000)
+      
+      
+・レシピ40:株価収益率の正規度判定
+    ・その前の要素と比べてパーセントの変化を求める
+               amzn.Close.pct_change()
+               
+               
+    ・データの標準化(z-score)を各行で行う    ※平均から標準偏差でいくつ乖離しているか示す       
+               mean = amzn_daily_return.mean()
+               std = amzn_daily_return.std()
+               
+               abs_z_score = amzn_daily_return.sub(mean).abs().div(std)
+               
+・レシピ41:queryメソッドによるBooleanインデックス法の読みやすさ改善  
+    ・queryメソッドを使うとsqlのように書ける
+             
+               depts = ['Houston Police Department-HPD',Houston Fire Department (HFD)']
+               
+               qs = "DEPARTMENT in @depts " \        ※@を使うと変数を参照出来る
+                    "and GENDER == 'Female' " \
+                    "and 80000 <= BASE_SALARY <= 120000"
+               
+               data = employee.query(qs)
+               
+・レシピ42:whereメソッドによるSeriesの保持               
+    ・whereメソッドは基準に合致しない値を欠損値にする         
+               criteria_high = fb_likes < 20000   ※この例だと20000以上は欠損値
+               fb_likes.where(criteria_high)
+               
+    ・第2パラメータotherで置換する値を制御できる                     
+               fb_likes.where(criteria_high, other=20000)
+               
+    ・whereと同様なことがclipメソッドでも可能                
+               fb_likes.clip(lower=300, upper=20000)
+               ※上記式と等価 fb_likes.where(criteria_high, other=20000)\
+                                     .where(criteria_low, 300)
+               
+               clip_lower,clip_upper
+               
+・レシピ43:DataFrameの行のマスキング                
+    ・maskメソッドはBoolean条件がTrueになる所を欠損値にする
+               c1 = movie['title_year'] >= 2010
+               c2 = movie['title_year'].isnull()
+               criteria = c1 | c2
+    
+               movie.mask(criteria)  ※DataFrameだと条件一致した行の全値が欠損値に変わる
+               
+    ・使用スピードはBooleanインデックス法の方が一桁速い 
+               
+・レシピ44:Boolean, 整数位置, ラベルによる選択                 
+    ・locインデクサでもフィルタリング出来る              
+               movie.loc(criteria)  
+               
+               
+    ・Booleanのndarray型にすればilocインデクサでもフィルタリング出来る                               
+               movie.iloc[criteria.values]                      
+               
+    ・カラム選択にBooleanインデックス法を使うことも出来る               
+               criteria_col = movie.dtypes == np.int64 
+               movie.loc[:, criteria_col]  
+               
+■インデックスアラインメント(インデックスの順序は重要)
+
+・レシピ45:Indexオブジェクトの検査
+    ・インデックスオブジェクトはスカラー値やリスト渡し、スライスで要素を選択可能
+               columns = data.columns
+               columns[[1,8]]
+               
+    ・インデックスオブジェクトはメソッドも使用可能  
+               columns.min(), columns.max(), columns.isnull().sum()
+               
+    ・インデックスオブジェクトは基本算術演算と比較演算が出来る                
+               columns + '_A'
+               
+    ・インデックスオブジェクトは和、積、差、対象差という集合演算ができる                              
+               c1 = columns[:4]
+               c2 = columns[2:6]
+               c1.union(c2) # c1 | c2
+               
+・レシピ46:デカルト積の作成(インデックスが重複している場合) 
+    ・同じデータでインデックス順が違う場合はデカルト積になる       
+    ・同じデータでインデックス順が同じ場合はデカルト積にならない
+    
+・レシピ47:インデックス爆発
+
+・レシピ48:等しくないインデックスの値を埋める
+    ・インデックスのdifferenceメソッドで2つのIndexの有無を調べる 
+               baseball_14.index.difference(baseball_15.index)              
+               
+    ・算術演算でメソッドを使うと欠損値を埋める事が出来る
+               hits_14.add(hits_15, fill_value=0)    ※欠損値同士の場合は欠損値になる
+               
+    ・dataFrameで欠損値がどこにあるか分かりやすくする               
+               (df_14 + df_15).style.highlight_null('bule')
+
+・レシピ49:別のDataFrameからカラムを追加             
+    ・インデックスが同じなら別テーブルからカラム追加可能(重複は不可)                
+               
+    ・sampleメソッドを使えば非復元無作為抽出できる                  
+               data.sample(n=10)
+               
+・レシピ50:各カラムの最大値をハイライトする
+    ・数字だけの文字列を数値に変換する(数値に変換できない文字は欠損値にする)   
+               college[col] = pd.to_numeric(college[col], errors='coerce')
+               
+    ・2値(0/1)しかとらないカラムを見つける              
+               criteria = college.nunique() == 2
+               
+    ・カラムのリストを作成する               
+               college.columns[criteria].tolist()
+               
+    ・各カラムの最大値のインデックスラベルを見つける   ※idmaxは最大値の中で先頭だけ返す           
+               college_n2.idxmax()              
+               
+    ・各カラムの最大値をstyle属性でハイライトにする              
+               college_n2.style.highlight_max()                 
+               
+    ・各行の最大値をstyle属性でハイライトにする                
+               college.style.highlight_max(axis='columns')
+                              
+・レシピ51:メソッドチェイニングでidxmaxの代用             
+    ・eqメソッドなど、DataFrameのカラムと渡したSeriesのインデックスラベルとをアライメントする
+               df.eq(series)    
+    
+・レシピ52:最多の最大値を求める     
+    
+    
+■集約、フィルタ、変換のためのグループ分け [分割-適用-結合]   
+
+・レシピ53:集約の定義    
+    ・groupbyメソッドは集約のために使う
+    
+    ・groupbyでグループ分けしてaggメソッドで集約する    
+               data.groupby('AIRLINE').agg({'ARR_DELAY':'mean'})  df形式になる
+               data.groupby('AIRLINE')['ARR_DELAY'].agg('mean')   ※リスト形式だと複数可能
+               data.groupby('AIRLINE')['ARR_DELAY'].agg(np.mean)  ※集約関数を直接適用出来る    
+               data.groupby('AIRLINE')['ARR_DELAY'].mean()        ※集約関数1個なら直接適用できる       
+    
+    ・groupbyオブジェクトにメソッドチェイニング可能な集約関数
+      min  max  mean  median  sum  count  std  var  size  describe  nunique  idxmin  idxmax
+    
+・レシピ54:複数のカラムと関数のグループ分けと集約       
+    ・複数の場合の例    
+               df.groupby(['AIRLINE', 'WEEKDAY'])['CANCELLED'].agg('sum')
+               df.groupby(['AIRLINE', 'WEEKDAY'])['CANCELLED', 'DIVERTED'].agg(['sum', 'mean'])
+    
+               group_cols = ['ORG_AIR', 'DEST_AIR']
+               agg_dict = {'CANCELLED':['sum', 'mean', 'size'],'AIR_TIME':['mean', 'var']}
+               df.groupby(group_cols).agg(agg_dict)
+                      
+・レシピ55:グループ分けの後でMultiIndex解消                          
+    ・2階層のカラムを１つにまとめる                      
+               level0 =df.columns.get_level_values(0)      ※階層は上/左から0で始まる
+               level1 =df.columns.get_level_values(1)        
+                      
+               df.columns = level0 + '_' + level1
+               
+    ・行ラベルを1階層にする 
+               df.reset_index()  
+                               
+・レシピ56:集約関数のカスタマイズ
+    ・自作の関数を渡すことが出来る  
+               def max_deviation(s):
+                   std_score = (s - s.mean()) / s.std()
+                   return std_score.abs().max()
+
+               df.groupby('STABBR')['UGDS'].agg(max_deviation).round(1).head()
+               ※SeriesとしてUGDSカラムを暗黙的にmax_deviationに渡され、各グループで一度呼び出される
+                 
+                複数のカラムも適用可能
+               df.groupby('STABBR')['UGDS', 'SATVRMID', 'SATMTMID'].agg(max_deviation)
+
+・レシピ57:集約関数のargsと*kwargsをカスタマイズ
+   ・自作の関数に引数を渡す事が出来る
+               def pct_between(s, low, high):
+                   return s.between(low, high).mean()
+
+               df.groupby(['STABBR', 'RELAFFIL'])['UGDS'].agg(pct_between, 1000, 10000)
+               df.groupby(['STABBR', 'RELAFFIL'])['UGDS'].agg(pct_between, high=10000, low=1000) 
+               
+                  
+   ・クロージャを使って入れ子関数を作れば、複数の関数で引数が使える
+  
+                def make_agg_func(func, name, *args, **kwargs):
+                    def wrapper(x):
+                        return func(x, *args, **kwargs)
+                wrapper.__name__ = name
+                return wrapper
+
+                my_agg1 = make_agg_func(pct_between, 'pct_1_3k', low=1000, high=3000)
+                my_agg2 = make_agg_func(pct_between, 'pct_10_30k', 10000, 30000)
+
+                df.groupby(['STABBR', 'RELAFFIL'])['UGDS'].agg(['mean', my_agg1, my_agg2])
+                
+・レシピ58:groupbyオブジェクトの検討                
+   ・dir関数で利用可能な機能を確認する                
+                grouped = college.groupby(['STABBR', 'RELAFFIL'])                
+                print([attr for attr in dir(grouped) if not attr.startswith('_')])                
+                
+   ・グループの個数を知る                 
+                grouped.ngroups
+                
+   ・グループの中身をリストで見る                
+                list(grouped.groups.keys())                
+                
+   ・グループのデータを取り出す                 
+                grouped.get_group(('FL', 1))   ※グループをタプルで渡す
+                
+   ・各グループの先頭の数行を1つのDataFrameにする                 
+                grouped.head(2).head(6)
+                
+   ・各グループの指定行を選ぶ                  
+                grouped.nth([1,-1]).head()      ※例は先頭行と末尾行
+                
+   ・display関数を使うと、読みやすいフォーマットでDFが得れれる
+                from IPython.display import display
+                                    
+・レシピ59:マイノリティが多数派の米国州をフィルタリング                  
+   ・groupbyのfilterメソッドでどのグループを保持するか決定するユーザ関数を渡すことが出来る 
+     ユーザ関数はBooleanを返す必要がある
+                    
+                def check_minority(df, threshold):
+                    minority_pct = 1 - df['UGDS_WHITE']
+                    total_minority = (df['UGDS'] * minority_pct).sum()
+                    total_ugds = df['UGDS'].sum()
+                    total_minority_pct = total_minority / total_ugds
+                    return total_minority_pct > threshold
+                    
+                college_filtered = grouped.filter(check_minority, threshold=.5)    
+                
+・レシピ60:減量の勝負でtransform
+   ・transformメソッドは呼び出したDataFrameと同じ行数のオブジェクトを返す
+                  weight_loss.groupby(['Name', 'Month'])['Weight'].transform(find_perc_loss)
+
+   ・Numpyのwhereはベクトル化if-then-elseが出来、BooleanのSeriesや配列を他の値にマップできる
+                  winner['Winner'] = np.where(winner['Amy'] < winner['Bob'], 'Amy', 'Bob')
+
+   ・データの形式をpivotメソッドで変形する
+                  df.pivot(index='Month', columns='Name', values='Perc Weight Loss')
+
+・レシピ61:SATの加重平均点を州ごとにapplyで計算
+   ・Groupbyは各グループで計算を行うメソッドが４つある
+      agg       :スカラー値を出力
+      filter    :Boolean      
+      transform :グループと同じ長さのSeries
+      apply     :スカラー値、Series,DataFrameのどれもOK      
+
+                def weighted_math_average(df):
+                    weighted_math = df['UGDS'] * df['SATMTMID']
+                    return int(weighted_math.sum() / df['UGDS'].sum())
+                    
+                df.groupby('STABBR').apply(weighted_math_average)    
+
+   ・Seriesを返して複数の新たなカラムを作成可能
+
+　　　　　　　　from collections import OrderedDict
+　　　　　　　　def weighted_average(df):
+　　　　　　　　    data = OrderedDict()
+　　　　　　　　    data['weighted_math_avg'] = wm_avg
+　　　　　　　　    data['weighted_verbal_avg'] = wv_avg
+　　　　　　　　    data['math_avg'] = df['SATMTMID'].mean()
+　　　　　　　　    return pd.Series(data)
+　　　　　　　　
+　　　　　　　　college2.groupby('STABBR').apply(weighted_average)
+　　　　　　　　
+・レシピ62:連続変数でグループ分け
+   ・cut関数でデータをビン分けする
+                bins = [-np.inf, 200, 500, 1000, 2000, np.inf]   ※np.infは無限大オブジェクト
+                cuts = pd.cut(flights['DIST'], bins=bins)
+
+   ・groupbyにcut関数結果を渡し、各グループの分布をみる
+                flights.groupby(cuts)['AIRLINE'].value_counts(normalize=True)
+
+・レシピ63:都市間の航空便の総数
+   ・各行で独立に英字順にソートする     ※各行毎にソートできる            
+                flights[['ORG_AIR', 'DEST_AIR']].apply(sorted, axis=1)    ※DataFrameのApplyメソッド
+                                
+   ・DataFrameのApplyメソッドは全行をイテレーションする              
+   
+   ・同じ事がnp.sortでも可能で実行速度だとnp.sortの方が700倍速い
+                data_sorted = np.sort(flights[['ORG_AIR', 'DEST_AIR']])
+                flights_sort2 = pd.DataFrame(data_sorted, columns=['AIR1', 'AIR2'])
+                
+・レシピ64:定期運航便の最長ストリーク
+   ・diffメソッドは現在の値と指定した行数離れたところの値との差を計算する。デフォルトは直前
+
+   ・whereメソッドで条件でTrue or Falseを返す。デフォルトではFalse値が欠損値になる
+
+   ・ffillメソッドは欠損値を最後の非欠損値で置き換えて、下方向に進む     
+   
+   ・元データと累積和を使ってストリーク(一続きに連続したもの)を算出   
+                s = pd.Series([0, 1, 1, 0, 1, 1, 1,0])   
+                s1 = s.cumsum()
+                s.mul(s1).diff().where(lambda x: x <0).ffill().add(s1, fill_value=0)
+   
+   
+■整然(tidy)形式にデータを再構成    
+   ・整然データとは？
+     ・変数がカラムになっている
+     ・観察が行になっている
+     ・観察ユニットがテーブルになっている
+     
+   ・Pandasの整然化ツール
+     ・DataFrameのメソッドのstack,melt,uncstack,pivot
+     ・ヘルパーメソッドのrename,rename_axis,reset_index,set_index
+       
+・レシピ65:変数値カラム名をstackで整然化         
+   ・stackメソッドはカラム名をすべて取ってインデックスにくるよう形を変える(全てのカラム名を転置する) 
+                df.stack()   ※マルチインデックスになる  
+                             ※デフィルトでは変形時に欠損値は削除する
+   
+   ・reset_indexメソッドで結果をDataFrameにする   
+                df.stack().reset_index()   
+   
+   ・seriesのrename_axisメソッドを使い、reset_index前にインデックスレベルの名前を設定   
+                df.stack().rename_axis(['state', 'fruit']) 
+                
+   ・全てをチェイニングして1回で処理   
+                df.stack().rename_axis(['state', 'fruit'])\
+                          .reset_index(name='weight')
+   
+   ・stackのコツは変換したくないカラム全てをインデックスにおくこと
+                df.set_index('State').stack()  
+                
+・レシピ66:変数値カラム名をmeltで整然化 
+   ・meltの方がstackより柔軟性に優れている
+   
+   ・meltメソッドを使う
+                df.melt(id_vars=['State'],value_vars=['Apple', 'Orange', 'Banana'])
+                ※id_varsは変形せず保持するカラムリスト
+                  value_varsは１つのカラムに変形するカラム名のリスト,指定しないとid_vars以外が変形する
+   
+   ・var_nameとvalue_nameで名前を変更できる   
+                df.melt(id_vars=['State'],
+                        value_vars=['Apple', 'Orange', 'Banana'],
+                        var_name='Fruit',
+                        value_name='Weight') 
+                        
+ ・レシピ67:複数の変数グループを同時にスタック
+   ・wide_to_long関数を使うと、カラム集合を同時にスタック出来る
+                stubs = ['actor', 'actor_facebook_likes']
+                actor2_tidy = pd.wide_to_long(df,
+                             stubnames=stubs,
+                             i=['movie_title'],
+                             j='actor_num',
+                             sep='_')  
+                             
+                ※stubnamesで始まる名前のカラム全てが1カラムにスタックされる
+                  デフィルトは、グループのカラム名は数字で終わる必要がある
+                  変形後のデータのラベルにこの数字が使われる
+                  sepパラメータが数値と文字を繋いでいる物を示す      
+                  
+ ・レシピ68:スタックしたデータを元に戻す                
+   ・データセットをstack/meltとしたものを逆演算するにはunstack/pivot
+   
+   ・stackしたデータを元に戻す   
+                df.stacked.unstack()   
+                  
+   ・meltしたデータを元に戻す                    
+                df.pivot(index='INSTNM',
+                         columns='Race',
+                         values'Percntage')
+                  
+   ・stack/unstackを使わなくとも転置が出来る                     
+                df.T
+                df.transpose()                  
+                  
+・レシピ69:groupby集約後でunstack  
+   ・インデックスが未選択の時でunstackする時のインデックスを指定する   
+                df.undtack('GENDER')   ※デフィルトは最奥インデックスレベルをカラムにする
+                
+・レシピ70:groupby集約でpivot_tableの代用
+   ・ピボット表を作る
+                fp =flights.pivot_table(index='AIRLINE',
+                                       columns='ORG_AIR',
+                                       values='CANCELLED',
+                                       aggfunc='sum',       ※集約関数をリストで渡す場合、Numpy関数を使う必要あり
+                                       fill_value=0).round(2)
+
+   ・上記をgroupby集約を使い同じ結果を得る
+                fg = flights.groupby(['AIRLINE', 'ORG_AIR'])['CANCELLED'].sum()
+                fg_unstack = fg.unstack('ORG_AIR', fill_value=0)
+
+
+・レシピ71:変形を容易にするレベル軸の名前変更
+   ・swaplevelメソッドを使い、インデックスレベルを入れ替える
+                cg.stack('AGG_FUNCS').swaplevel('AGG_FUNCS', 'STABBR', axis='index').head()
+
+
+・レシピ72:複数の変数がカラム名になっている場合の整然化
+   ・カラム名が複数連結(例：M40 40-44)をstrのsplitメソッドでカラムを2分割する
+                sex_age = wl_melt['sex_age'].str.split(expand=True)         ※Seriesのみ可能、デフィルトは空白を分割                    sex_age.columns = ['Sex', 'Age Group']  ※カラム名の変更
+                
+   ・文字列の先頭文字を選ぶ                
+                sex_age['Sex'].str[0]   
+                
+   ・extractメソッドは複雑な正規表現を使って文字列から特定部分を抽出する                   
+                df.sex_age.str.extract('(\d{2}[-+](?:\d{2})?)',expand=False)
+                
+   ・任意の文字(ピリオド)と空白の正規表現の場合                  
+                df.sex_age.str.(pat='. ',expand=True)              
+                
+   ・assignは動的に新たなカラムを追加する                
+                sex = wl_melt.sex_age.str[0]
+                new_cols = {'Sex':sex, 'Age Group': age_group}
+                wl_tidy2 = wl_melt.assign(**new_cols)
+                
+・レシピ73:複数の変数がカラム値の場合の整然化              
+   ・pivotでは変換しないカラムが複数の場合はNG                
+                df.pivot(index=['Name', 'Date'],
+                 columns='Info', values='Value')
+                
+   ・上記の代わりに先に必要なカラムをインデックスにしてからunstackする                
+                df.set_index(['Name', 'Date', 'Info']).unstack('Info')
+                
+   ・MulriIndexカラムになっているのをreset_indexで戻す。最内レベルを指定するには-1                
+                df.set_index(['Name', 'Date', 'Info']).unstack('Info').reset_index(col_level=-1) 
+                
+   ・MulriIndexメソッドのdroplevelを使い最上位カラムを削除してindexレベルの名前をNoneでなくす   
+                df.columns.droplevel(0).rename(None)     
+   
+   ・squeezeメソッドを使うとdfで1カラムの時だけ、Seriesに変換する
+   
+   ・pivot_tableでaggfuncにfirstを用いて先頭の値を使えばunstackと同じ結果になる
+                df.pivot_table(index=['Name', 'Date'],columns='Info', values='Value', aggfunc='first')\
+                  .reset_index().rename_axis(None, axis='columns')
+   
+・レシピ74:複数の値が同じセルにある場合の整然化
+   ・セル内で特定のグループを抽出するには、extractメソッドを使いグループごとに括弧でくくる
+                df.Geolocation.str.extract('([0-9.]+). (N|S), ([0-9.]+). (E|W)',expand=True) 
+                
+・レシピ75:変数がカラム名とカラム値になっている場合の整然化                         
+   ・meltとpivot_tableで変形する例
+                 sensors.melt(id_vars=['Group', 'Property'], var_name='Year')\
+                        .pivot_table(index=['Group', 'Year'],columns='Property', values='value')\
+                        .reset_index()\
+                        .rename_axis(None, axis='columns')  
+                        
+   ・上記をstackとundtackで代用した例、コツは変換対象でないカラムをまずindexにすること                        
+                 sensors.set_index(['Group', 'Property'])\
+                        .stack()\
+                        .unstack('Property')\
+                        .rename_axis(['Group', 'Year'], axis='index')\
+                        .rename_axis(None, axis='columns')\
+                        .reset_index() 
+                        
+・レシピ76:複数の観察が同じテーブルにある場合の整然化                        
+   ・１つのテーブルから複数テーブルに分割する、正規化を行う
+   
+   ・主キー(一意な識別子)を作成するのに、pd.Categoricalでカテゴリデータを作成する
+     カテゴリデータは内部で整数マッピングしており、この数値をcode属性で得られる
+                 cate_data = pd.Categorical(df_table['col_1'])
+                 df_table.insert(1,'main_id',cate_data.codes)
+                 
+■pandasオブジェクトの結合
+      appendメソッド、concatメソッド、maergeメソッド                   
+     
+・レシピ77:DataFrameに新たな行を追加
+   ・locインデクサで行を追加
+                 append_list = ['Aria', 1]
+                 df.loc[4] = append_list
+
+   ・loc+辞書で行を追加する
+                 df.loc[len(df)] = {'Name': 'Zayd', 'Age':20}
+
+   ・loc+Seriesで行を追加する
+                 df.loc[len(df)] = pd.Series({'Age':32, 'Name': 'Dean'})
+
+     ※locによる追加は元データを変更する
+
+   ・appendで行を追加する(元データは変更されない)
+                 df.append({'Name':'Aria', 'Age':1}, ignore_index=True)
+                 ※ignore_index=Trueにすると古いindexを全て消し、RangeIndexで置き換えられる  
+
+   ・appendだと同時に複数行追加できる
+                 s1 = pd.Series({'Name': 'Zach', 'Age':3}, name=len(names))
+                 s2 = pd.Series({'Name': 'Zayd', 'Age':2}, name='USA')
+                 df.append([s1, s2])
+
+   ・DataFrameから行を追加するためのテクニック
+     1行をSereiesで取り出し、to_dictメソッドで辞書として行の列を作成
+                 data_dict = df.iloc[0].to_dict()
+                 
+     文字ありは空文字列を、その他は欠損値を代入してクリアする            
+                 new_data_dict = {k:'' if isinstance(v, str) else
+                 np.nan for k, v in data_dict.items()}
+                 
+・レシピ78:複数のDataFrameを結合(concat)                 
+   ・dfデータを１つのリストにしてconcat関数で連結できる                 
+                 s_list = [stocks_2016, stocks_2017]
+                 s_list
+                 pd.concat(s_list)
+                 
+   ・keysパラメータで各行をラベル指定でき、nameパラメータでインデックス名を変更出来る                 
+                 pd.concat(s_list, keys=['2016', '2017'], names=['Year'])
+                 
+   ・axisをcolumnsか1に変えると水平方向に連結
+                 pd.concat(s_list, keys=['2016', '2017'],
+                 axis='columns', names=['Year', None])   ※デフィルトでは外部結合
+   
+   ・joinパラメータをinnerに変更すると2テーブル一致したものだけ結合される   
+                 pd.concat(s_list, join='inner', keys=['2016', '2017'],
+                 axis='columns', names=['Year', None])
+   
+・レシピ80:concat, join, mergeの相違点と理解   
+   ・concat:
+      ・pandas関数
+      ・複数のpandasオブジェクトを垂直/水平に結合
+      ・インデックスのみアラインメント
+      ・インデックスに重複あればエラー
+      ・デフィルトは外部結合だかオプションで内部結合もある      
+        ※複数のDFをインデックスでアラインメントする場合はmargeよりconcatを選ぶ      
+      
+   ・join:
+      ・DataFrameメソッド
+      ・複数のpandasオブジェクトを水平に結合
+      ・呼び出しDFのカラム/インデックスと他のオブジェクトのインデックスでアラインメント
+      ・joinするカラム/インデックスの重複はデカルト積計算で処理
+      ・デフィルトは左結合だが、オプションで内部、外部、右結合
+        ※joinの第一パラメータはotherで１つのDF/Seriesか任意個数のDF/Seriesのリストになる
+   
+   ・merge:
+      ・DataFrameメソッド
+      ・呼び出しDFのカラム/インデックスと他のDFのカラム/インデックスでアラインメント
+      ・joinするカラム/インデックスの重複はデカルト積計算で処理
+      ・デフィルトは内部結合だが、オプションで左結合、外部、右結合
+         ※mergeだけが呼び出しDFと渡されたDFの両方のカラム値でアラインメントする
+   
+
+   ・同じ形式で同じようなファイル名を1個のリストにまとめる例     ※データインポートの自動化の例
+                 years = 2016, 2017, 2018
+                 stock_tables = [pd.read_csv('data/stocks_{}.csv'.format(year),
+                                            index_col='Symbol')
+                                            for year in years ]
+
+   ・joinメソッドで水平方向に結合する
+                 stocks_2016.join(stocks_2017, lsuffix='_2016', rsuffix='_2017', how='outer')
+                 ※lsuffixやrsuffixでカラム名を識別する
+                 
+   ・joinメソッドで3個のテーブルを結合する例                 
+                 other = [stocks_2017.add_suffix('_2017'), stocks_2018.add_suffix('2018')]
+                 stocks_2016.add_suffix('_2016').join(other, how='outer')
+                 
+   ・mergeメソッドで水平方向に結合 
+                 stocks_2016.merge(stock_2017, left_index=True, right_index=True)
+                 ※デフィルトでは同じ名前カラムの値でアラインメントする
+                   left_indexとright_indexをTrueにすればインデックスでアラインメントできる
+                   
+   ・mergeメソッドで同じカラム名でマージする                   
+                   df.merge(food_prices, on=['item', 'store'])
+   
+   ・joinメソッドでmargeと同じようにする例 
+                   food_prices_join = df.set_index(['item', 'store']) ※まずインデックスをセットする
+                   food_transactions.join(food_prices_join, on = ['item', 'store'])
+   
+・レシピ81:SQLデータベースの接続  
+   ・SQLAlchemyを立ち上げデータを読み込む
+                   from sqlalchemy import create_engine
+                   engine = create_engine('sqlite:///data/chinook.db')
+                   tracks = pd.read_sql_table('tracks',engine)
+
+
+   ・timedeltaデータ型に変換する
+                   pd.to_timedelta(df, unit='ms') 
+   
+   ・timedeltaデータの時間を整数秒に丸める   
+                   timedelta_data.dt.floor('s')
+   
+■時系列分析   
+   ・Python標準のdatetimeモジュール
+     date: 年月日による値
+     time: 時分秒マイクロ秒による値、日付を含まない
+     datetime：日付と時間を合わせたもも
+             
+   ・Pandasには日付と時間をカプセル化したTimestapオブジェクトがある
+   
+   ・Pythonとpandasにはtimedeltaで日付時間の加減計算を行う
+   
+・レシピ82:Pythonとpandasの日付ツールの違いを理解  
+   ・datetimeモジュールから、date,time, datetimeオブジェクトを作る 
+                   import datetime
+     
+                   date = datetime.date(year=2013, month=6, day=7)
+                   time = datetime.time(hour=12, minute=30,second=19, microsecond=463198)
+                   dt = datetime.datetime(year=2013, month=6, day=7,
+                                          hour=12, minute=30, second=19,
+                                          microsecond=463198)
+                   datatime.datatime.now()  ※現在時刻を表示                       
+   
+   ・timedeltaオブジェクトを作る
+                   td = datetime.timedelta(weeks=2, days=5, hours=10,
+                                           minutes=20, seconds=6.73,
+                                           milliseconds=99, microseconds=8)    
+                                           
+   ・dateとdatetimeオブジェクトにtimedeltaを加える
+                   date + td
+                   dt + td
+                       
+   ・pandasのTimestampオブジェクトを作成する
+                   pd.Timestamp(year=2012, month=12, day=21, hour=5,minute=10, second=8, microsecond=99)
+                   pd.Timestamp('2016/1/10')
+                   pd.Timestamp('2015-5/10')
+                   pd.Timestamp('Jan 3, 2019 20:45.56')
+                   pd.Timestamp('2016-01-05T05:34:43.123456789')
+                   pd.Timestamp(500) ※unix紀元(1970年1月1日)からの経過時間(デフィルトは秒)
+                   pd.Timestamp(5000, unit='D') 
+                   pd.Timestamp.now() ※現在時刻を表示                  
+  
+   ・pandasのto_datetime関数で文字列をTimestampオブジェクトに変換出来る(オプションにerrors,format)
+                   pd.to_datetime('2015-5-13')
+                   pd.to_datetime('2015-13-5', dayfirst=True)
+                   pd.to_datetime(100, unit='D', origin = '2013-1-1')  
+                   
+   ・pandasのto_datetime関数で文字又は整数のリストかSeries全体をTimestampに変換出来る
+                   s = pd.Series(['12-5-2015', '14-1-2013','20/12/2017', '40/23/2017'])
+                   pd.to_datetime(s, dayfirst=True, errors='coerce')
+                   ※erroesで文字列の日付変換不能は場合の処置を決める
+                     raiseなら例外を起こしプログラム停止
+                     igonreなら関数に渡された元のシーケンスを返す
+                     coerceならNaTを返す
+   
+                   pd.to_datetime(['Aug 3 1999 3:45:56', '10/31/2017'])
+                   
+                   pd.to_datetime('Sep 20 1984', format='%b %d %Y') ※日付書式指定をした方が変換が早い
+   
+   ・pandasのtimedeltaオブジェクトを作成(Timedelta, to_timedelta)
+                   pd.Timedelta('12 days 5 hours 3 minutes 123456789 nanoseconds')
+                   pd.Timedelta(days=5, minutes=7.34)
+                   pd.Timedelta('67:15:45.454000')
+   
+                   time_strings = ['2 days 24 minutes 89.67 seconds', '00:45:23.6']
+                   pd.to_timedelta(time_strings)
+   
+   ・timedeltaは加減算が出来る  
+                   pd.Timedelta('12 days 5 hours 3 minutes') * 2
+                   pd.Timestamp('1/1/2017') + pd.Timedelta('12 days 5 hours 3 minutes') * 2
+                   pd.Timedelta('12 days') / pd.Timedelta('3 days')
+   
+   ・TimedelataとTimestampには属性やメソッドなど多数の機能がある  
+                   ts = pd.Timestamp('2016-10-1 4:23:23.9')
+   
+                   ts.ceil('h')
+                   ts.year, ts.month, ts.hour, ts.minute, ts.second
+                   ts.dayofweek, ts.dayofyear, ts.daysinmonth
+                   ts.to_pydatetime()  ※pythonの標準データに変換
+     
+・レシピ83:時系列を賢くスライシング   
+   ・インデックスの型がdatatimeだとlocインデクサでスライス出来る   
+                   df.loc['2016-05-12 16:45:00']
+   
+   ・インデックスの型がdatatimeだとlocインデクサで部分マッチングする行を全て選ぶことが出来る  
+                   df.loc['2016-05-12']
+                   df.loc['2016-05']
+                   df.loc['2016-05-12 03']
+                   df.loc['Dec 2015']
+                   
+   ・月の形式には様々なパターンがある                  
+                   df.loc['2016 Sep, 15']
+                   df.loc['21st October 2014 05']                   
+                   
+   ・スライス表記を使って、データ範囲を指定可能
+                   df.loc['2015-3-4':'2016-1-1'].sort_index()   
+                   crime.loc['2015-3-4 22': '2016-1-1 11:45:00'].sort_index()   ※スライスに必要な精度をつけれる
+
+      ※インデックスがsortしてある方がスライスが早い
+      
+・レシピ84:DatetimeIndexでだけ働くメソッドを使う
+   ・between_timeメソッドは指定時刻間のデータを選択する      
+                   df.between_time('2:00','5:00')                    
+
+   ・at_timeメソッドで指定した時刻の日付全てを選ぶ
+                   df.at_time('5:47')
+
+   ・時間セグメントを使って先頭6か月を選ぶ
+                   df.first(pd.offsets.MonthBegin(6))
+                   df.first(pd.offsets.MonthEnd(6)) 
+                   df.first(pd.offsets.MonthBegin(6, normalize=True)) ※時間要素を削除する
+                   
+                   上記と同等の内容
+                   df.loc[:'2012-06']
+                   
+                   ※firstの反対にlastメソッドがあり最終nセグメントを選ぶ
+
+   ・次のオフセットまでをオフセットエリアスと呼ばれる文字列で選択出来る
+                   df.first('5D')  ※5日後まで
+                   df.first('5B')  ※5勤務日まで
+                   df.first('7w')  ※7週、週末は日曜まで
+                   df.first('3QS')  ※第3四半期の開始まで
+                   df.first('7A')  ※71年の終わりまで
+                   
+・レシピ85:週ごとの犯罪係数(日付のGroup化について)                   
+   ・resampleメソッドは日付のGroupbyで指定した形でグループ化する                   
+                   df.resample('W')   ※オブジェクトを生成する
+                   df.resample('W').size()
+                   
+   ・アンカーオフセットを使えば日曜以外で週を終わらせる事が出来る
+                   df.resample('W-THU').size()
+                   
+   ・Groupbyを使ってグループ化もできる
+                   df.groupby(pd.Grouper(freq='W')).size()   
+   
+   ・resampleオブジェクトのメソッドを調べる
+                   r = crime_sort.resample('W')
+                   resample_methods = [attr for attr in dir(r) if attr[0].islower()]
+                                      
+   ・インデックスがTimestampでない場合は、resampleはonで、groupbyはkeyでカラムを選ぶ                  
+                   df.resample('W', on='data_col').size()
+                   df.groupby(pd.Grouper(key='data_col',freq='w')).size()
+                   
+・レシピ86:週ごとの犯罪と交通事故を別々に集約                   
+   ・resampleでグループ分けして指定カラムの和を別々にとる                   
+                   df.resample('Q')['col_1', 'col_2'].sum()  ※Qは12月31日を年の終わりとする
+                   
+・レシピ87:曜日と年での犯罪件数の測定                   
+   ・Timestampカラムのdtアクセサを使うと様々な属性やメソッドにアクセスできる
+     例：曜日を見つける
+                   df['data_col'].dt.weekly_name.value_counts()
+                   
+         上記データをグラフ化する
+                   days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+                   title = 'Denver Crimes and Traffic Accidensts per Weekday'
+                   wd_counts.reindex(days).plot(kind='barh',  title=title)  ※reindexメソッドでindexの順序を変える       
+                   
+   ・Timestampカラムのdtアクセサを使い曜日と年の両方でグループ分けする
+                   weekday = df['data_col'].dt.weekday_name
+                   year = df['data_col'].dt.year
+                   df_wd_y = df.groupby([year, weekday]).size()   
+                   
+         上記データをindexレベルの名前を変えて、曜日レベルでunstackする                   
+                   crime_table = crime_wd_y.rename_axis(['Year', 'Weekday'])\
+                                           .unstack('Weekday')                                                           
+         上記データをヒートマップで確認する
+                   import seaborn as sns
+                   sns.heatmap(crim_table, cmap='Greys')
+                   
+・レシピ88:DatetimeIndexで無名関数を使いグループ分け                                                            
+   ・DatetimeIndexとpandas Timestampと同じ属性・メソッドを確認する                                                                         common_attrs = set(dir(crime_sort.index)) & set(dir(pd.Timestamp))
+                   print([attr for attr in common_attrs if attr[0] !='_']) 
+                    
+   ・インデックスから曜日名を見つける( df['data_col'].dt.weekly_name.value_counts()と同じ)
+                   crime_sort.index.weekday_name.value_counts()
+                   
+   ・groupbyメソッドで関数を使うと、関数がインデックスに渡され、戻り値を使ってグループができる                   
+                   crime_sort.groupby(lambda x: x.weekday_name)['IS_CRIME','IS_TRAFFIC'].sum()
+                   
+   ・DataFrameで各カラムの最大値をハイライトする
+                   cr_final.style.highlight_max(color='blue')   
+                   
+   ・xsメソッドを使うとどのようなインデックスレベルからも単一値を取得出来る                                                               cr_final.xs('IS_TRAFFIC', axis='columns', level=0).head()
+   
+・レシピ89:Timestampと別のカラムでグループ分け  
+   ・GroupbyとTimestampで項目+時間軸でグループ分けする
+                  sal_avg = employee.groupby('GENDER').resample('10AS')['BASE_SALARY'].mean() 
+                  
+   ・項目と日付を同時にグループ化するにはgroupbyメソッドのみ  
+                  sal_avg2 = employee.groupby(['GENDER', pd.Grouper(freq='10AS')])\
+                                              ['BASE_SALARY'].mean()               
+                                              
+                                              
+・レシピ90:merge_asofで犯罪率が20%低かったのは最近ではいつかを見つける 
+   ・merge_asofで近似値のマージ(マージ対象にもっとも近い物とマージ)が出来る
+     マージするデータは予め値ソートが必要
+                  pd.merge_asof(goal,all_data, left_on ='Total_Goal',right_on='Total',
+                                by='OFFENSE_CATEGORY_ID',suffixes=('_Current', '_Last'))      
+                                                                
+   ・pandasにはPeriod型で時間を表すことも出来る
+                  pd.Period(year=2012, month=5, day=17, hour=14, minute=20, freq='T')
+   
+   ・to_periodメソッドでTimestampをPeriod型に変換出来る    
+   
+■matplotlib,pandas,seabornによる可視化
+
+   ・seabornは整然(長め)データに、
+     pandasは集約(幅広)データに適している
+     
+・レシピ91:matplotlib入門
+                  import matplotlib.pyplot as plt
+                  %matplotlib inline
+   ・ステートフルインターフェイスで書く場合     
+                  x = [-3, 5, 7]
+                  y = [10, 2, 5]
+                  
+                  plt.figure(figsize=(15,3))
+                  plt.plot(x, y)
+                  plt.xlim(0, 10)
+                  plt.ylim(-3, 8)
+                  plt.xlabel('X Axis')
+                  plt.ylabel('Y axis')
+                  plt.title('Line Plot')
+                  plt.suptitle('Figure Title', size=20, y=1.03)
+                  
+   ・オブジェクト方式で書く場合             
+                  x = [-3, 5, 7]
+                  y = [10, 2, 5]
+                  
+                  fig, ax = plt.subplots(figsize=(15,3))
+                  ax.plot(x, y)
+                  ax.set_xlim(0, 10)
+                  ax.set_ylim(-3, 8)
+                  ax.set_xlabel('X axis')
+                  ax.set_ylabel('Y axis')
+                  ax.set_title('Line Plot')
+                  fig.suptitle('Figure Title', size=20, y=1.03)
+                  
+   ・Figureのサイズを調べる
+                  fig.get_size_inches()
+                  
+   ・Figureのサイズを変更する
+                  fig.set_size_inches(14,4)
+                                    
+   ・facecolorを設定する
+                  fig.set_facecolor('.9')
+                  ax.set_facecolor('.7')                                
+
+・レシピ92:matplotlibでデータの可視化                                                                                      ・移動平均を求めるにはrolling関数を使う  
+                  df.rolling(5, min_periods=1).mean()
+                  
+   ・データpassの~はホームディレクトリを表す
+   
+   ・osライブラリのexpanduser関数で完全パスを作る事が出来る
+                  os.path.expanduser('~/Desktop/movie_budget.png')
+                  
+・レシピ93:pandasのプロットの基本
+   ・2変数でグラフの作成：線グラフ・散布図・棒グラフ
+   ・1変数でグラフの作成：箱ひげ図、ヒストグラム、カーネル密度推定
+   
+   ・2変数はデフィルトでインデックスをx軸、カラムの値をy軸に取る
+   ・1変数は各変数に変換又は集約を行いプロットする
+   
+   ・2変数のプロット例
+                  fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(16,4))
+                  fig.suptitle('Two Variable Plots', size=20, y=1.02)
+                  df.plot(kind='line', color=color, ax=ax1, title='Line plot')
+                  df.plot(x='Apples', y='Oranges', kind='scatter',ax=ax2, title='Scatterplot')
+                  df.plot(kind='bar', color=color, ax=ax3, title='Bar plot')   
+                  
+   ・1変数のプロット例                  
+                  fig, (ax1, ax2, ax3) = plt.subplots(1,3, figsize=(16, 4))
+                  fig.suptitle('One Variable Plots', size=20, y=1.02)
+                  
+                  df.plot(kind='kde', color=color, ax=ax1, title='KDE plot')
+                  df.plot(kind='box', ax=ax2, title='Boxplot')
+                  df.plot(kind='hist', color=color, ax=ax3, title='Histogram') 
+                  
+   ・x値、y値を指定する例   
+                  fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(16,4))
+                  df.sort_values('Apples').plot(x='Apples', y='Oranges', kind='line', ax=ax1)
+                  df.plot(x='Apples', y='Oranges', kind='bar', ax=ax2)
+                  df.plot(x='Apples', kind='kde', ax=ax3)   
+                                   
+・レシピ94:flightsデータセットの可視化
+   ・year,month,dayの3カラムのDFがあれば、to_datetime関数に渡すとTimestampに変換される
+                  pd.to_datetime(df_date)
+                                       
+   ・interpolateで欠損データを線形補間する。デフォルトは前方向にしか補間しない
+     limit_directionパラメータをbothにすると欠損値が残らない
+                  df.interpolate(limit_direction='both')
+                  
+   ・pandasグラフの引数rotは目盛りラベルを指定角度で回転する
+                  oc = flights['ORG_AIR'].value_counts()
+                  oc.plot(kind='bar', ax=ax2, rot=0, title='Origin City')
+                  
+   ・pandasグラフのヒストでrangeを渡すと、x軸に制限をして再計算してくれる
+                  df['ARR_DELAY'].plot(kind='hist', ax=ax6, title='aa', range=(0, 200)) 
+                  
+   ・DataFrameのboxplotを使う  
+                  df.boxplot(by='DIST_GROUP', column='TIME_SCORE', figsize=(16,4))  
+                  
+・レシピ95:層グラフで今後の傾向を発見する
+   ・カラムを順に積み重ねた層グラフを作成する
+                  df.plot(kind='area', figsize=(18,4),cmap='Greys', xlim=('2013-6', None), ylim=(0,1), legend=False)   
+                                    
+   ・asfreqメソッドでオフセットエイリアスのデータを選択出来る
+                  df.asfreq('3MS', method='bfill')  ※resample()はデータを集約する
+                  
+・レシピ96:seabornとpandasの違いを理解
+                  import seaborn as sns 
+                  
+   ・Seabornはグラフ作成時に集約してくれる                  
+                  
+   ・カラムを数えて棒グラフにする
+                  sns.countplot(y='DEPARTMENT', data=employee);
+                  ※pandasの場合
+                  employee['DEPARTMENT'].value_counts().plot('barh')
+                     
+   ・平均を求めて棒グラフにする
+                  sns.barplot(x='RACE', y='BASE_SALARY', data=employee)                                                                   ※pandasの場合
+                  avg_sal =employee.groupby('RACE', sort=False)['BASE_SALARY'].mean()
+                  ax = avg_sal.plot(kind='bar', rot=0, figsize=(16,4), width=.8)
+                  
+   ・第3変数hueを使うと、グループを区別出来る 
+                   sns.barplot(x='RACE', y='BASE_SALARY', hue='GENDER', data=employee)
+                   ※pandasの場合(人種と性別でグループ分けして、性別をカラム名としてunstackする)
+                   employee.groupby(['RACE','GENDER'], sort=False)['BASE_SALARY'].mean().unstack('GENDER')\
+                           .plot(kind='bar', figsize=(16,4), rot=0, width=.8)  
+                           
+   ・箱ひげ図を作る
+                   sns.boxplot(x='GENDER', y='BASE_SALARY', data=employee, hue='RACE')
+                   ※pandasの場合(2つの別のAxesを性別に作り人種ごとに給与の箱ひげ図をつくる)                                               fig, ax_array = plt.subplots(1, 2, figsize=(14,4), sharey=True)
+                   for g, ax in zip(['Female', 'Male'], ax_array):
+                       employee.query('GENDER== @g') \
+                               .boxplot(by='RACE', column='BASE_SALARY', ax=ax, rot=20)
+                       ax.set_title(g + ' Salary')
+                       ax.set_xlabel('')
+                   fig.suptitle('')
+                   
+・レシピ97:seabornグリッドで多変数解析  
+
+   ・散布図を作成する
+                    sns.regplot(x='YEARS_EXPERIENCE', y='BASE_SALARY', data=employee)
+
+   ・複数データを散布図に入れ、回帰直線も追加する
+                    sns.lmplot('YEARS_EXPERIENCE', 'BASE_SALARY',
+                               hue='GENDER', palette='Greys',
+                               scatter_kws={'s':10}, data=employee)
+                               
+   ・複数データを異なるグループに分ける
+                    sns.lmplot(x='YEARS_EXPERIENCE', y='BASE_SALARY',
+                               hue='GENDER', col='RACE', col_wrap=3,
+                               palette='Greys', sharex=False,
+                               line_kws = {'linewidth':5},
+                               data=employee)
+                                                              
+・レシピ98:diamondsデータセットのSimpsonパラドックスをseabornで明らかにする
+   ・Seabornはカラムがカテゴリ型だとカテゴリ順で並べてくれる
+                                                                   
+   ・カテゴリ毎の棒グラフを作成 
+                    sns.catplot(x='color', y='price', col='clarity',
+                                col_wrap=4, data=diamonds, kind='bar') 
+   
+   ・数値を等しい間隔で分ける 
+                    pd.qcut(df.clumns,5) 
+                    
+   ・2変数×複数のグラフをPairGridで作成できる
+                    g = sns.PairGrid(diamonds,size=5,
+                                    x_vars=['color', 'cut', 'clarity'],
+                                    y_vars=['price'])
+                    
+                    g.map(sns.barplot)                                                                               
